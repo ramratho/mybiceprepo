@@ -1,0 +1,29 @@
+trigger:
+- master
+
+name: Deploy Bicep files
+
+variables:
+  vmImageName: 'ubuntu-latest'
+  azureServiceConnection: 'Hub Service Connection'
+  resourceGroupName: 'cws-hub-chn1-core-rg-01'
+  templateFile: './Core_Infra/Hub/cws-hub-cis-ubuntu-20.04-vm.bicep'
+pool:
+  vmImage: $(vmImageName)
+
+steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+        az vm image terms accept --urn center-for-internet-security-inc:cis-ubuntu-linux-2004-l1:cis-ubuntu2004-l1:latest
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      az deployment group create --resource-group $(resourceGroupName) --template-file $(templateFile)

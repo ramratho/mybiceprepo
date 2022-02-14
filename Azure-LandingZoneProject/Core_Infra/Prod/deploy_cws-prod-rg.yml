@@ -1,0 +1,21 @@
+trigger:
+- master
+
+name: Deploy Bicep files
+
+variables:
+  vmImageName: 'ubuntu-latest'
+  azureServiceConnection: 'azureinfra'
+  location: 'SwitzerlandNorth'
+  templateFile: './Core_Infra/Prod/cws-prod-rg.bicep'
+pool:
+  vmImage: $(vmImageName)
+
+steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      az deployment sub create --location $(location) --template-file $(templateFile)

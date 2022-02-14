@@ -1,0 +1,59 @@
+trigger:
+- master
+
+name: Deploy Azure Infra Bicep files
+
+parameters:
+- name: deployTask
+  type: boolean
+
+variables:
+  vmImageName: 'ubuntu-latest'
+  # service connections
+  azureServiceConnection: 'Anatoltestconnection'
+  # deployment scopes
+  resourceGroupName: 'cws-hub-chn1-core-rg-01'
+  # locations
+  location: 'SwitzerlandNorth'
+  # template files
+  rgCreateParamFile: './Core_Infra/Hub/cws-hub-rg.bicep'
+  vnetCreateParamFile: './Core_Infra/Hub/cws-hub-infraSetup.bicep'
+  secAlyxCreateParamFile: './Core_Infra/Hub/cws-hub-secAlyxSetup.bicep'
+  # tasks to deploy
+  rgDeployCond: 'false'
+  vnetDeployCond: 'false'
+  secAlyxDeployCond: 'true'
+
+pool:
+  vmImage: $(vmImageName)
+
+steps:
+- task: AzureCLI@2
+  name: rgDeploy
+  condition: $(rgDeployCond)
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      az deployment sub create --location $(location) --template-file $(rgCreateParamFile)
+
+- task: AzureCLI@2
+  name: vnetDeploy
+  condition: $(vnetDeployCond)
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      az deployment group create --resource-group $(resourceGroupName) --template-file $(vnetCreateParamFile)
+
+- task: AzureCLI@2
+  name: secAlyxDeploy
+  condition: $(secAlyxDeployCond)
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      az deployment group create --resource-group $(resourceGroupName) --template-file $(secAlyxCreateParamFile)

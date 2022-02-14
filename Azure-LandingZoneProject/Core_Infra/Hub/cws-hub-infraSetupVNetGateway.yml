@@ -1,0 +1,21 @@
+trigger:
+- master
+
+name: Deploy Bicep files
+
+variables:
+  vmImageName: 'ubuntu-latest'
+  azureServiceConnection: 'Anatoltestconnection'
+  resourceGroupName: 'cws-hub-chn1-core-rg-01'
+  templateFile: './Core_Infra/Hub/cws-hub-infraSetupvNetGateway.bicep'
+pool:
+  vmImage: $(vmImageName)
+
+steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      az deployment group create --resource-group $(resourceGroupName) --template-file $(templateFile)

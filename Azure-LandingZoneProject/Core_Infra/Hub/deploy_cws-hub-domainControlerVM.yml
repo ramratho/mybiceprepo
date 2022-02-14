@@ -1,0 +1,56 @@
+trigger:
+- master
+
+name: Deploy Azure Domain Controller Setup Bicep files
+
+variables:
+  vmImageName: 'ubuntu-latest'
+  # service connections
+  azureServiceConnection: 'Anatoltestconnection'
+  # deployment scopes
+  resourceGroupName: 'cws-hub-chn1-core-rg-01'
+  # locations
+  # location: 'SwitzerlandNorth'
+  # template files
+  asCreateParamFile: './Core_Infra/Hub/cws-hub-domainControlerVM.bicep'
+  #vnetCreateParamFile: './Core_Infra/Hub/cws-hub-infraSetup.bicep'
+  #secAlyxCreateParamFile: './Core_Infra/Hub/cws-hub-secAlyxSetup.bicep'
+
+pool:
+  vmImage: $(vmImageName)
+
+steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+        az vm image terms accept --urn center-for-internet-security-inc:cis-windows-server-2019-v1-0-0-l1:cis-ws2019-l1:latest
+
+- task: AzureCLI@2
+  name: DomainControllerVmDeploy
+  inputs:
+    azureSubscription: $(azureServiceConnection)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      az deployment group create --resource-group $(resourceGroupName) --template-file $(asCreateParamFile)
+
+#- task: AzureCLI@2
+#  name: vnetDeploy
+#  inputs:
+#    azureSubscription: $(azureServiceConnection)
+#    scriptType: bash
+#    scriptLocation: inlineScript
+#    inlineScript: |
+#      az deployment group create --resource-group $(resourceGroupName) --template-file $(vnetCreateParamFile)
+
+#- task: AzureCLI@2
+#  name: diskDeploy
+#  inputs:
+#    azureSubscription: $(azureServiceConnection)
+#    scriptType: bash
+#    scriptLocation: inlineScript
+#    inlineScript: |
+#      az deployment group create --resource-group $(resourceGroupName) --template-file $(secAlyxCreateParamFile)
